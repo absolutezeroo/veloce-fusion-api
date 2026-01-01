@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/api/auth', name: 'api_auth_')]
+#[Route('/auth', name: 'api_auth_')]
 final class AuthController extends AbstractApiController
 {
     public function __construct(

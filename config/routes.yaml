@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
 
-controllers:
+# API routes with locale prefix
+api:
     resource:
-        path: ../src/Presentation/Controller/
-        namespace: App\Presentation\Controller
+        path: ../src/Presentation/Controller/Api/
+        namespace: App\Presentation\Controller\Api
     type: attribute
-
-api_controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
-    type: attribute
+    prefix: /{_locale}
+    requirements:
+        _locale: 'en|fr|de|es|pt|nl'
+    defaults:
+        _locale: 'en'

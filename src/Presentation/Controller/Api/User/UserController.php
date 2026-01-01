@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/api/user', name: 'api_user_')]
+#[Route('/user', name: 'api_user_')]
 final class UserController extends AbstractApiController
 {
     public function __construct(

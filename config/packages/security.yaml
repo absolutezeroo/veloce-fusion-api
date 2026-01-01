@@ -14,17 +14,17 @@ security:
             security: false
 
         login:
-            pattern: ^/api/auth/login$
+            pattern: '^/[a-z]{2}/auth/login$'
             stateless: true
             json_login:
-                check_path: /api/auth/login
+                check_path: api_auth_login
                 username_path: username
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
         api:
-            pattern: ^/api
+            pattern: '^/[a-z]{2}/'
             stateless: true
             jwt: ~
 
@@ -32,11 +32,15 @@ security:
             lazy: true
 
     access_control:
-        - { path: ^/api/auth/login$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/auth/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/user/look$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/user/online$, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        # Public routes (with locale prefix)
+        - { path: '^/[a-z]{2}/auth/login$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/auth/register$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/auth/register/looks$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/user/look$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/user/online$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/settings/', roles: PUBLIC_ACCESS }
+        # All other API routes require authentication
+        - { path: '^/[a-z]{2}/', roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

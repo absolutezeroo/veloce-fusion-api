@@ -1,3 +1,8 @@
-api_login:
-    path: /api/auth/login
+# Login route (handled by security firewall)
+api_auth_login:
+    path: /{_locale}/auth/login
     methods: ['POST']
+    requirements:
+        _locale: 'en|fr|de|es|pt|nl'
+    defaults:
+        _locale: 'en'
