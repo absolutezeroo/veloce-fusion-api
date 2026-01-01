@@ -11,12 +11,12 @@ use Doctrine\ORM\Mapping as ORM;
 trait TimestampableTrait
 {
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private DateTimeImmutable $createdAt {
+    public private(set) DateTimeImmutable $createdAt {
         get => $this->createdAt;
     }
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?DateTimeImmutable $updatedAt = null {
+    public private(set) ?DateTimeImmutable $updatedAt = null {
         get => $this->updatedAt;
     }
 
