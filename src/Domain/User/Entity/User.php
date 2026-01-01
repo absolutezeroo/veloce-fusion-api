@@ -20,13 +20,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['user:read', 'user:list'])]
+    #[Groups(['user:read', 'user:list', 'user:profile'])]
     private int $id {
         get => $this->id;
     }
 
     #[ORM\Column(length: 25, unique: true)]
-    #[Groups(['user:read', 'user:list'])]
+    #[Groups(['user:read', 'user:list', 'user:profile'])]
     public private(set) string $username {
         get => $this->username;
         set => strtolower(trim($value));
@@ -46,7 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'user:list'])]
+    #[Groups(['user:read', 'user:list', 'user:profile'])]
     public private(set) ?string $look = null {
         get => $this->look;
     }
@@ -59,7 +59,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column(length: 127, nullable: true)]
-    #[Groups(['user:read', 'user:list'])]
+    #[Groups(['user:read', 'user:list', 'user:profile'])]
     public private(set) ?string $motto = null {
         get => $this->motto;
     }
@@ -95,7 +95,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column(name: 'online', type: 'smallint', options: ['default' => 0])]
-    #[Groups(['user:read', 'user:list'])]
+    #[Groups(['user:read', 'user:list', 'user:profile'])]
     public private(set) int $online = 0 {
         get => $this->online;
     }
@@ -107,13 +107,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     #[ORM\Column(name: 'last_online', type: 'integer', nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:profile'])]
     public private(set) ?int $lastOnline = null {
         get => $this->lastOnline;
     }
 
     #[ORM\Column(name: 'account_created', type: 'integer', nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:profile'])]
     public private(set) ?int $accountCreated = null {
         get => $this->accountCreated;
     }

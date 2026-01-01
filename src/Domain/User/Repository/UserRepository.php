@@ -52,6 +52,96 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getSingleScalarResult();
     }
 
+    /**
+     * Count total users.
+     */
+    public function countAll(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Count users currently online.
+     */
+    public function countOnline(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.online = :online')
+            ->setParameter('online', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Search users by username.
+     *
+     * @return array{items: User[], total: int, page: int, perPage: int, lastPage: int}
+     */
+    public function search(string $term, int $page = 1, int $perPage = 20): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.username LIKE :term')
+            ->setParameter('term', '%' . $term . '%')
+            ->orderBy('u.id', 'DESC');
+
+        $qb->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage);
+
+        $countQb = clone $qb;
+        $total = (int) $countQb->select('COUNT(u.id)')
+            ->setFirstResult(0)
+            ->setMaxResults(null)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $items = $qb->getQuery()->getResult();
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'lastPage' => (int) ceil($total / $perPage) ?: 1,
+        ];
+    }
+
+    /**
+     * Get paginated online users.
+     *
+     * @return array{items: User[], total: int, page: int, perPage: int, lastPage: int}
+     */
+    public function findOnlinePaginated(int $page = 1, int $perPage = 50): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.online = :online')
+            ->setParameter('online', true)
+            ->orderBy('u.id', 'DESC');
+
+        $qb->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage);
+
+        $countQb = clone $qb;
+        $total = (int) $countQb->select('COUNT(u.id)')
+            ->setFirstResult(0)
+            ->setMaxResults(null)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $items = $qb->getQuery()->getResult();
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'lastPage' => (int) ceil($total / $perPage) ?: 1,
+        ];
+    }
+
     public function save(User $user, bool $flush = true): User
     {
         $this->getEntityManager()->persist($user);

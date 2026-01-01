@@ -210,6 +210,19 @@ class RoomRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * Count rooms owned by a user.
+     */
+    public function countByOwner(int $ownerId): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.ownerId = :ownerId')
+            ->setParameter('ownerId', $ownerId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function save(Room $room, bool $flush = true): Room
     {
         $this->getEntityManager()->persist($room);
