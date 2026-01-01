@@ -18,3 +18,5 @@ parameters:
         - '#Property .+::\$rolePermissions is never read, only written#'
         - '#Property .+::\$roleRanks is never read, only written#'
         - '#Property .+::\$(parentRole|childRole|role|permission|bannedUser|staffUser).+ can be removed from the property type#'
+        # Article module Doctrine relations
+        - '#Property .+::\$(author|category|tags|article|user|parent|replies).+ can be removed from the property type#'
