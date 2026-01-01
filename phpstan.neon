@@ -20,3 +20,7 @@ parameters:
         - '#Property .+::\$(parentRole|childRole|role|permission|bannedUser|staffUser).+ can be removed from the property type#'
         # Article module Doctrine relations
         - '#Property .+::\$(author|category|tags|article|user|parent|replies).+ can be removed from the property type#'
+        # Room module Doctrine relations
+        - '#Property .+::\$(owner).+ can be removed from the property type#'
+        # Guild module Doctrine relations
+        - '#Property .+::\$(room|guild|members).+ can be removed from the property type#'
