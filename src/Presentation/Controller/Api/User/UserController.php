@@ -11,21 +11,21 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 #[Route('/user', name: 'api_user_')]
 final class UserController extends AbstractApiController
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly SerializerInterface $serializer,
+        private readonly NormalizerInterface $normalizer,
     ) {}
 
     #[Route('', name: 'current', methods: ['GET'])]
     public function current(#[CurrentUser] User $user): JsonResponse
     {
         return $this->success(
-            $this->serializer->normalize($user, 'json', ['groups' => ['user:read']])
+            $this->normalizer->normalize($user, 'json', ['groups' => ['user:read']])
         );
     }
 

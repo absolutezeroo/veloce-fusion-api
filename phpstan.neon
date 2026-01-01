@@ -1,0 +1,16 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+    excludePaths:
+        - src/Kernel.php
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    ignoreErrors:
+        # PHP 8.4 property hooks + Doctrine: PHPStan doesn't understand these yet
+        - '#Property .+::\$id is never written, only read#'
+        - '#Property .+::\$id is unused#'
+        - '#Property .+::\$ip.+ is never read, only written#'

@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 #[Route('/auth', name: 'api_auth_')]
 final class AuthController extends AbstractApiController
@@ -20,7 +20,7 @@ final class AuthController extends AbstractApiController
     public function __construct(
         private readonly RegisterUserService $registerUserService,
         private readonly JWTTokenManagerInterface $jwtManager,
-        private readonly SerializerInterface $serializer,
+        private readonly NormalizerInterface $normalizer,
     ) {}
 
     #[Route('/register', name: 'register', methods: ['POST'])]
@@ -35,7 +35,7 @@ final class AuthController extends AbstractApiController
 
         return $this->success([
             'token' => $token,
-            'user' => $this->serializer->normalize($user, 'json', ['groups' => ['user:read']]),
+            'user' => $this->normalizer->normalize($user, 'json', ['groups' => ['user:read']]),
         ], 'Registration successful');
     }
 
@@ -49,7 +49,7 @@ final class AuthController extends AbstractApiController
         }
 
         return $this->success(
-            $this->serializer->normalize($user, 'json', ['groups' => ['user:read']])
+            $this->normalizer->normalize($user, 'json', ['groups' => ['user:read']])
         );
     }
 }
