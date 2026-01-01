@@ -12,8 +12,8 @@ final readonly class CreatePermissionDTO
         #[Assert\NotBlank]
         #[Assert\Length(min: 2, max: 255)]
         #[Assert\Regex(
-            pattern: '/^[a-z0-9\-]+$/',
-            message: 'Permission name can only contain lowercase letters, numbers, and hyphens'
+            pattern: '/^[A-Z][A-Z0-9_]*$/',
+            message: 'Permission name must be uppercase with underscores (e.g., MANAGE_USERS)'
         )]
         public string $name,
 

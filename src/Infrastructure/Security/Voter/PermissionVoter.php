@@ -15,11 +15,11 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  * Security Voter that checks user permissions based on rank and RBAC system.
  *
  * Usage in controllers:
- *   #[IsGranted('PERMISSION_create-article')]
- *   #[IsGranted('PERMISSION_view-all-settings')]
+ *   #[IsGranted('PERMISSION_CREATE_ARTICLE')]
+ *   #[IsGranted('PERMISSION_VIEW_ALL_SETTINGS')]
  *
  * Or programmatically:
- *   $this->denyAccessUnlessGranted('PERMISSION_manage-users');
+ *   $this->denyAccessUnlessGranted('PERMISSION_MANAGE_USERS');
  */
 #[AutoconfigureTag('security.voter')]
 final class PermissionVoter extends Voter

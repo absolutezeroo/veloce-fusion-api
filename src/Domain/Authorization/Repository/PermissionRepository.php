@@ -21,7 +21,7 @@ class PermissionRepository extends ServiceEntityRepository
 
     public function findByName(string $name): ?Permission
     {
-        return $this->findOneBy(['name' => strtolower($name)]);
+        return $this->findOneBy(['name' => strtoupper($name)]);
     }
 
     /**

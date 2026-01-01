@@ -31,7 +31,7 @@ class Permission
     #[Groups(['permission:read', 'permission:list'])]
     public private(set) string $name {
         get => $this->name;
-        set => strtolower(trim($value));
+        set => strtoupper(trim($value));
     }
 
     #[ORM\Column(type: 'text', nullable: true)]

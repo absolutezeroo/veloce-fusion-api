@@ -76,8 +76,8 @@ final class PermissionResolver
 
     private function doCheckPermission(int $userRank, string $permissionName): bool
     {
-        // Find the permission
-        $permission = $this->permissionRepository->findByName($permissionName);
+        // Find the permission (normalize to uppercase)
+        $permission = $this->permissionRepository->findByName(strtoupper($permissionName));
 
         // If permission doesn't exist in DB, assume it's not required (allow access)
         if ($permission === null) {

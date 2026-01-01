@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -13,4 +12,34 @@
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 
+###> Environment files (contain secrets) ###
+.env
+.env.dev
+.env.prod
+.env.test
+###< Environment files ###
+
+###> IDE ###
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+###< IDE ###
+
+###> Claude Code ###
+.claude/
+CLAUDE.local.md
+CLAUDE.md
+###< Claude Code ###
+
+###> OS ###
+.DS_Store
+Thumbs.db
+###< OS ###
+
+###> PHP ###
+composer.phar
+/phpunit.xml
+.phpunit.result.cache
+###< PHP ###
