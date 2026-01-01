@@ -11,7 +11,9 @@ use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Adds refresh token as HTTP-only cookie on successful JWT authentication.
+ * Handles JWT authentication success:
+ * - Formats response to match our API convention
+ * - Adds refresh token as HTTP-only cookie
  */
 final class AuthenticationSuccessListener
 {
@@ -28,6 +30,18 @@ final class AuthenticationSuccessListener
         if (!$user instanceof User) {
             return;
         }
+
+        $data = $event->getData();
+        $token = $data['token'] ?? null;
+
+        // Format response to match our API convention
+        $event->setData([
+            'success' => true,
+            'code' => 200,
+            'data' => [
+                'access_token' => $token,
+            ],
+        ]);
 
         $request = $this->requestStack->getCurrentRequest();
         $ipAddress = $request?->getClientIp();

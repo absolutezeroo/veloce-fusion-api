@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 #[Route('/user', name: 'api_user_')]
@@ -22,6 +23,7 @@ final class UserController extends AbstractApiController
     ) {}
 
     #[Route('', name: 'current', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function current(#[CurrentUser] User $user): JsonResponse
     {
         return $this->success(
@@ -61,6 +63,7 @@ final class UserController extends AbstractApiController
     }
 
     #[Route('/ticket', name: 'ticket', methods: ['PUT'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function generateTicket(#[CurrentUser] User $user): JsonResponse
     {
         $ticket = bin2hex(random_bytes(32));

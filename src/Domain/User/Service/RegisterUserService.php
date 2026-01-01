@@ -82,6 +82,7 @@ final readonly class RegisterUserService
         $user->setIpRegister($ipAddress);
         $user->setIpCurrent($ipAddress);
         $user->setLastLogin(time());
+        $user->setLastOnline(time());
         $user->setAccountCreated(time());
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->password);

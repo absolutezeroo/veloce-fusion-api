@@ -70,15 +70,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         get => $this->credits;
     }
 
-    #[ORM\Column(name: 'rank', type: 'integer', options: ['default' => 1])]
+    #[ORM\Column(name: '`rank`', type: 'integer', options: ['default' => 1])]
     #[Groups(['user:read'])]
     public private(set) int $rank = 1 {
         get => $this->rank;
     }
 
-    #[ORM\Column(name: 'auth_ticket', length: 255, nullable: true)]
+    #[ORM\Column(name: 'auth_ticket', length: 255, options: ['default' => ''])]
     #[Ignore]
-    private ?string $authTicket = null {
+    private string $authTicket = '' {
         get => $this->authTicket;
     }
 
@@ -94,9 +94,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         get => $this->ipCurrent;
     }
 
-    #[ORM\Column(name: 'online', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'online', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['user:read', 'user:list', 'user:profile'])]
-    public private(set) int $online = 0 {
+    public private(set) string $online = '0' {
         get => $this->online;
     }
 
@@ -106,9 +106,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         get => $this->lastLogin;
     }
 
-    #[ORM\Column(name: 'last_online', type: 'integer', nullable: true)]
+    #[ORM\Column(name: 'last_online', type: 'integer', options: ['default' => 0])]
     #[Groups(['user:read', 'user:profile'])]
-    public private(set) ?int $lastOnline = null {
+    public private(set) int $lastOnline = 0 {
         get => $this->lastOnline;
     }
 
@@ -231,7 +231,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function setOnline(int $online): static
+    public function setOnline(string $online): static
     {
         $this->online = $online;
         return $this;
@@ -243,7 +243,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function setLastOnline(?int $lastOnline): static
+    public function setLastOnline(int $lastOnline): static
     {
         $this->lastOnline = $lastOnline;
         return $this;

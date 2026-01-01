@@ -19,49 +19,39 @@ class RefreshToken
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private int $id {
-        get => $this->id;
-    }
+    private ?int $id = null;
 
     #[ORM\Column(length: 128, unique: true)]
-    public private(set) string $token {
-        get => $this->token;
-    }
+    public private(set) string $token;
 
     #[ORM\Column(name: 'user_id', type: 'integer')]
-    public private(set) int $userId {
-        get => $this->userId;
-    }
+    public private(set) int $userId;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null {
-        get => $this->user;
-    }
+    private ?User $user = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    public private(set) DateTimeImmutable $expiresAt {
-        get => $this->expiresAt;
-    }
+    public private(set) DateTimeImmutable $expiresAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    public private(set) DateTimeImmutable $createdAt {
-        get => $this->createdAt;
-    }
+    public private(set) DateTimeImmutable $createdAt;
 
     #[ORM\Column(length: 45, nullable: true)]
-    public private(set) ?string $ipAddress = null {
-        get => $this->ipAddress;
-    }
+    public private(set) ?string $ipAddress = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    public private(set) ?string $userAgent = null {
-        get => $this->userAgent;
-    }
+    public private(set) ?string $userAgent = null;
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /** @internal Used by Doctrine */
+    public function setId(int $id): void
+    {
+        $this->id = $id;
     }
 
     public function getUser(): ?User

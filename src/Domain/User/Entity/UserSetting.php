@@ -32,33 +32,33 @@ class UserSetting
         get => $this->achievementScore;
     }
 
-    #[ORM\Column(name: 'can_change_name', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'can_change_name', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $canChangeName = 0 {
+    public private(set) string $canChangeName = '0' {
         get => $this->canChangeName;
     }
 
-    #[ORM\Column(name: 'block_following', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'block_following', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $blockFollowing = 0 {
+    public private(set) string $blockFollowing = '0' {
         get => $this->blockFollowing;
     }
 
-    #[ORM\Column(name: 'block_friendrequests', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'block_friendrequests', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $blockFriendRequests = 0 {
+    public private(set) string $blockFriendRequests = '0' {
         get => $this->blockFriendRequests;
     }
 
-    #[ORM\Column(name: 'block_roominvites', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'block_roominvites', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $blockRoomInvites = 0 {
+    public private(set) string $blockRoomInvites = '0' {
         get => $this->blockRoomInvites;
     }
 
-    #[ORM\Column(name: 'block_camera_follow', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'block_camera_follow', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $blockCameraFollow = 0 {
+    public private(set) string $blockCameraFollow = '0' {
         get => $this->blockCameraFollow;
     }
 
@@ -68,21 +68,21 @@ class UserSetting
         get => $this->onlineTime;
     }
 
-    #[ORM\Column(name: 'block_alerts', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'block_alerts', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $blockAlerts = 0 {
+    public private(set) string $blockAlerts = '0' {
         get => $this->blockAlerts;
     }
 
-    #[ORM\Column(name: 'ignore_bots', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'ignore_bots', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $ignoreBots = 0 {
+    public private(set) string $ignoreBots = '0' {
         get => $this->ignoreBots;
     }
 
-    #[ORM\Column(name: 'ignore_pets', type: 'smallint', options: ['default' => 0])]
+    #[ORM\Column(name: 'ignore_pets', type: 'string', length: 1, options: ['default' => '0'])]
     #[Groups(['settings:read'])]
-    public private(set) int $ignorePets = 0 {
+    public private(set) string $ignorePets = '0' {
         get => $this->ignorePets;
     }
 
@@ -103,31 +103,31 @@ class UserSetting
         return $this;
     }
 
-    public function setCanChangeName(int $value): static
+    public function setCanChangeName(string $value): static
     {
         $this->canChangeName = $value;
         return $this;
     }
 
-    public function setBlockFollowing(int $value): static
+    public function setBlockFollowing(string $value): static
     {
         $this->blockFollowing = $value;
         return $this;
     }
 
-    public function setBlockFriendRequests(int $value): static
+    public function setBlockFriendRequests(string $value): static
     {
         $this->blockFriendRequests = $value;
         return $this;
     }
 
-    public function setBlockRoomInvites(int $value): static
+    public function setBlockRoomInvites(string $value): static
     {
         $this->blockRoomInvites = $value;
         return $this;
     }
 
-    public function setBlockCameraFollow(int $value): static
+    public function setBlockCameraFollow(string $value): static
     {
         $this->blockCameraFollow = $value;
         return $this;
@@ -139,19 +139,19 @@ class UserSetting
         return $this;
     }
 
-    public function setBlockAlerts(int $value): static
+    public function setBlockAlerts(string $value): static
     {
         $this->blockAlerts = $value;
         return $this;
     }
 
-    public function setIgnoreBots(int $value): static
+    public function setIgnoreBots(string $value): static
     {
         $this->ignoreBots = $value;
         return $this;
     }
 
-    public function setIgnorePets(int $value): static
+    public function setIgnorePets(string $value): static
     {
         $this->ignorePets = $value;
         return $this;

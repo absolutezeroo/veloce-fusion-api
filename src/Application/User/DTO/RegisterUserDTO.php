@@ -4,37 +4,45 @@ declare(strict_types=1);
 
 namespace App\Application\User\DTO;
 
+use Symfony\Component\Serializer\Attribute\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final readonly class RegisterUserDTO
 {
     public function __construct(
-        #[Assert\NotBlank]
-        #[Assert\Length(min: 2, max: 12)]
+        #[Assert\NotBlank(message: 'Username is required')]
+        #[Assert\Type('string')]
+        #[Assert\Length(min: 2, max: 25)]
         #[Assert\Regex(
             pattern: '/^[a-zA-Z\-=!?@:,.\d]+$/',
             message: 'Username can only contain letters, numbers and -=!?@:,.'
         )]
-        public string $username,
+        public mixed $username = null,
 
-        #[Assert\NotBlank]
+        #[Assert\NotBlank(message: 'Email is required')]
+        #[Assert\Type('string')]
         #[Assert\Email]
         #[Assert\Length(min: 9)]
-        public string $mail,
+        public mixed $mail = null,
 
-        #[Assert\NotBlank]
+        #[Assert\NotBlank(message: 'Password is required')]
+        #[Assert\Type('string')]
         #[Assert\Length(min: 6)]
-        public string $password,
+        public mixed $password = null,
 
-        #[Assert\NotBlank]
+        #[Assert\NotBlank(message: 'Password confirmation is required')]
+        #[Assert\Type('string')]
         #[Assert\EqualTo(propertyPath: 'password', message: 'Passwords must match')]
-        public string $passwordConfirmation,
+        #[SerializedName('password_confirmation')]
+        public mixed $passwordConfirmation = null,
 
-        #[Assert\NotBlank]
-        public string $look,
+        #[Assert\NotBlank(message: 'Look is required')]
+        #[Assert\Type('string')]
+        public mixed $look = null,
 
-        #[Assert\NotBlank]
-        #[Assert\Choice(choices: ['M', 'F'])]
-        public string $gender = 'M',
+        #[Assert\NotBlank(message: 'Gender is required')]
+        #[Assert\Type('string')]
+        #[Assert\Choice(choices: ['M', 'F'], message: 'Gender must be M or F')]
+        public mixed $gender = 'M',
     ) {}
 }

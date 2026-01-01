@@ -41,14 +41,32 @@ final class AuthController extends AbstractApiController
         $token = $this->jwtManager->create($user);
 
         $response = $this->success([
-            'token' => $token,
-            'user' => $this->normalizer->normalize($user, 'json', ['groups' => ['user:read']]),
+            'access_token' => $token
         ], 'Registration successful');
 
         // Set refresh token cookie
         $this->setRefreshTokenCookie($response, $user, $request);
 
         return $response;
+    }
+
+    private function setRefreshTokenCookie(JsonResponse $response, User $user, Request $request): void
+    {
+        $refreshToken = $this->refreshTokenService->createRefreshToken(
+            user: $user,
+            ipAddress: $request->getClientIp(),
+            userAgent: $request->headers->get('User-Agent'),
+        );
+
+        $cookie = Cookie::create('refresh_token')
+            ->withValue($refreshToken->token)
+            ->withExpires(time() + $this->refreshTokenService->getTtl())
+            ->withPath('/')
+            ->withHttpOnly(true)
+            ->withSecure($this->appEnv !== 'dev')
+            ->withSameSite(Cookie::SAMESITE_LAX);
+
+        $response->headers->setCookie($cookie);
     }
 
     /**
@@ -78,7 +96,7 @@ final class AuthController extends AbstractApiController
         $accessToken = $this->jwtManager->create($result['user']);
 
         $response = $this->success([
-            'token' => $accessToken,
+            'access_token' => $accessToken,
         ]);
 
         // Set new refresh token cookie (rotation)
@@ -93,6 +111,17 @@ final class AuthController extends AbstractApiController
         $response->headers->setCookie($cookie);
 
         return $response;
+    }
+
+    private function clearRefreshTokenCookie(JsonResponse $response): void
+    {
+        $cookie = Cookie::create('refresh_token')
+            ->withValue('')
+            ->withExpires(time() - 3600)
+            ->withPath('/')
+            ->withHttpOnly(true);
+
+        $response->headers->setCookie($cookie);
     }
 
     /**
@@ -157,35 +186,5 @@ final class AuthController extends AbstractApiController
         return $this->success(
             $this->normalizer->normalize($this->getUser(), 'json', ['groups' => ['user:read']])
         );
-    }
-
-    private function setRefreshTokenCookie(JsonResponse $response, User $user, Request $request): void
-    {
-        $refreshToken = $this->refreshTokenService->createRefreshToken(
-            user: $user,
-            ipAddress: $request->getClientIp(),
-            userAgent: $request->headers->get('User-Agent'),
-        );
-
-        $cookie = Cookie::create('refresh_token')
-            ->withValue($refreshToken->token)
-            ->withExpires(time() + $this->refreshTokenService->getTtl())
-            ->withPath('/')
-            ->withHttpOnly(true)
-            ->withSecure($this->appEnv !== 'dev')
-            ->withSameSite(Cookie::SAMESITE_LAX);
-
-        $response->headers->setCookie($cookie);
-    }
-
-    private function clearRefreshTokenCookie(JsonResponse $response): void
-    {
-        $cookie = Cookie::create('refresh_token')
-            ->withValue('')
-            ->withExpires(time() - 3600)
-            ->withPath('/')
-            ->withHttpOnly(true);
-
-        $response->headers->setCookie($cookie);
     }
 }
