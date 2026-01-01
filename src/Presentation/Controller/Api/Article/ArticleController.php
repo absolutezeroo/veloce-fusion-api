@@ -13,6 +13,10 @@ use App\Domain\Article\Repository\ArticleRepository;
 use App\Domain\Article\Repository\CategoryRepository;
 use App\Domain\Article\Repository\TagRepository;
 use App\Domain\User\Entity\User;
+use App\Domain\Vote\Entity\Vote;
+use App\Domain\Vote\Enum\VoteEntity;
+use App\Domain\Vote\Enum\VoteType;
+use App\Domain\Vote\Repository\VoteRepository;
 use App\Presentation\Controller\Api\AbstractApiController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +33,7 @@ final class ArticleController extends AbstractApiController
         private readonly ArticleRepository $articleRepository,
         private readonly CategoryRepository $categoryRepository,
         private readonly TagRepository $tagRepository,
+        private readonly VoteRepository $voteRepository,
         private readonly NormalizerInterface $normalizer,
     ) {}
 
@@ -376,5 +381,139 @@ final class ArticleController extends AbstractApiController
         $this->articleRepository->remove($article);
 
         return $this->success(['deleted' => true]);
+    }
+
+    // ==================== VOTE ENDPOINTS ====================
+
+    /**
+     * Like an article (authenticated).
+     */
+    #[Route('/{slug}/like', name: 'like', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function like(
+        string $slug,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $article = $this->articleRepository->findPublishedBySlug($slug);
+
+        if (!$article) {
+            return $this->notFound('Article not found');
+        }
+
+        return $this->handleVote($article->getId(), $user->getId(), VoteType::LIKE);
+    }
+
+    /**
+     * Dislike an article (authenticated).
+     */
+    #[Route('/{slug}/dislike', name: 'dislike', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function dislike(
+        string $slug,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $article = $this->articleRepository->findPublishedBySlug($slug);
+
+        if (!$article) {
+            return $this->notFound('Article not found');
+        }
+
+        return $this->handleVote($article->getId(), $user->getId(), VoteType::DISLIKE);
+    }
+
+    /**
+     * Remove vote from an article (authenticated).
+     */
+    #[Route('/{slug}/vote', name: 'remove_vote', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function removeVote(
+        string $slug,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $article = $this->articleRepository->findPublishedBySlug($slug);
+
+        if (!$article) {
+            return $this->notFound('Article not found');
+        }
+
+        $existingVote = $this->voteRepository->findExistingVote($user->getId(), $article->getId(), VoteEntity::ARTICLE);
+
+        if (!$existingVote) {
+            return $this->error('No vote found', 404);
+        }
+
+        $this->voteRepository->remove($existingVote);
+
+        $counts = $this->voteRepository->getVoteCountsForEntity($article->getId(), VoteEntity::ARTICLE);
+
+        return $this->success([
+            'message' => 'Vote removed',
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => null,
+        ]);
+    }
+
+    /**
+     * Get user's vote on an article (authenticated).
+     */
+    #[Route('/{slug}/vote', name: 'get_vote', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getVote(
+        string $slug,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $article = $this->articleRepository->findPublishedBySlug($slug);
+
+        if (!$article) {
+            return $this->notFound('Article not found');
+        }
+
+        $existingVote = $this->voteRepository->findExistingVote($user->getId(), $article->getId(), VoteEntity::ARTICLE);
+        $counts = $this->voteRepository->getVoteCountsForEntity($article->getId(), VoteEntity::ARTICLE);
+
+        return $this->success([
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => $existingVote?->voteType->value,
+        ]);
+    }
+
+    /**
+     * Handle vote logic (like/dislike with toggle).
+     */
+    private function handleVote(int $articleId, int $userId, VoteType $voteType): JsonResponse
+    {
+        $existingVote = $this->voteRepository->findExistingVote($userId, $articleId, VoteEntity::ARTICLE);
+
+        if ($existingVote) {
+            if ($existingVote->voteType === $voteType) {
+                // Same vote type = remove vote (toggle off)
+                $this->voteRepository->remove($existingVote);
+                $message = 'Vote removed';
+                $userVote = null;
+            } else {
+                // Different vote type = change vote
+                $existingVote->updateType($voteType);
+                $this->voteRepository->save($existingVote);
+                $message = $voteType === VoteType::LIKE ? 'Changed to like' : 'Changed to dislike';
+                $userVote = $voteType->value;
+            }
+        } else {
+            // New vote
+            $vote = Vote::create($userId, $articleId, VoteEntity::ARTICLE, $voteType);
+            $this->voteRepository->save($vote);
+            $message = $voteType === VoteType::LIKE ? 'Article liked' : 'Article disliked';
+            $userVote = $voteType->value;
+        }
+
+        $counts = $this->voteRepository->getVoteCountsForEntity($articleId, VoteEntity::ARTICLE);
+
+        return $this->success([
+            'message' => $message,
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => $userVote,
+        ]);
     }
 }

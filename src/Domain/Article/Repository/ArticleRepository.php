@@ -6,6 +6,8 @@ namespace App\Domain\Article\Repository;
 
 use App\Domain\Article\Entity\Article;
 use App\Domain\Article\Enum\ArticleStatus;
+use App\Domain\Vote\Enum\VoteEntity;
+use App\Domain\Vote\Repository\VoteRepository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,8 +17,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ArticleRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly VoteRepository $voteRepository,
+    ) {
         parent::__construct($registry, Article::class);
     }
 
@@ -30,7 +34,7 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function findPublishedBySlug(string $slug): ?Article
     {
-        return $this->createQueryBuilder('a')
+        $article = $this->createQueryBuilder('a')
             ->leftJoin('a.author', 'u')
             ->leftJoin('a.category', 'c')
             ->addSelect('u', 'c')
@@ -40,6 +44,12 @@ class ArticleRepository extends ServiceEntityRepository
             ->setParameter('status', ArticleStatus::PUBLISHED)
             ->getQuery()
             ->getOneOrNullResult();
+
+        if ($article) {
+            $this->addVoteCountsToArticle($article);
+        }
+
+        return $article;
     }
 
     /**
@@ -69,8 +79,11 @@ class ArticleRepository extends ServiceEntityRepository
         $paginator = new Paginator($qb);
         $total = count($paginator);
 
+        $articles = iterator_to_array($paginator);
+        $this->addVoteCounts($articles);
+
         return [
-            'items' => iterator_to_array($paginator),
+            'items' => $articles,
             'total' => $total,
             'page' => $page,
             'perPage' => $perPage,
@@ -133,7 +146,7 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function findPinned(int $limit = 5): array
     {
-        return $this->createQueryBuilder('a')
+        $articles = $this->createQueryBuilder('a')
             ->leftJoin('a.author', 'u')
             ->leftJoin('a.category', 'c')
             ->addSelect('u', 'c')
@@ -144,6 +157,10 @@ class ArticleRepository extends ServiceEntityRepository
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        $this->addVoteCounts($articles);
+
+        return $articles;
     }
 
     /**
@@ -153,7 +170,7 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function findFeatured(int $limit = 3): array
     {
-        return $this->createQueryBuilder('a')
+        $articles = $this->createQueryBuilder('a')
             ->leftJoin('a.author', 'u')
             ->leftJoin('a.category', 'c')
             ->addSelect('u', 'c')
@@ -164,6 +181,10 @@ class ArticleRepository extends ServiceEntityRepository
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        $this->addVoteCounts($articles);
+
+        return $articles;
     }
 
     /**
@@ -189,8 +210,11 @@ class ArticleRepository extends ServiceEntityRepository
         $paginator = new Paginator($qb);
         $total = count($paginator);
 
+        $articles = iterator_to_array($paginator);
+        $this->addVoteCounts($articles);
+
         return [
-            'items' => iterator_to_array($paginator),
+            'items' => $articles,
             'total' => $total,
             'page' => $page,
             'perPage' => $perPage,
@@ -236,13 +260,47 @@ class ArticleRepository extends ServiceEntityRepository
         $paginator = new Paginator($qb);
         $total = count($paginator);
 
+        $articles = iterator_to_array($paginator);
+        $this->addVoteCounts($articles);
+
         return [
-            'items' => iterator_to_array($paginator),
+            'items' => $articles,
             'total' => $total,
             'page' => $page,
             'perPage' => $perPage,
             'lastPage' => (int) ceil($total / $perPage),
         ];
+    }
+
+    /**
+     * Add vote counts to a collection of articles.
+     *
+     * @param Article[] $articles
+     */
+    public function addVoteCounts(array $articles): void
+    {
+        if (empty($articles)) {
+            return;
+        }
+
+        $articleIds = array_map(fn(Article $a) => $a->getId(), $articles);
+        $voteCounts = $this->voteRepository->getVoteCountsForEntities($articleIds, VoteEntity::ARTICLE);
+
+        foreach ($articles as $article) {
+            $counts = $voteCounts[$article->getId()] ?? ['likes' => 0, 'dislikes' => 0];
+            $article->setLikes($counts['likes']);
+            $article->setDislikes($counts['dislikes']);
+        }
+    }
+
+    /**
+     * Add vote counts to a single article.
+     */
+    public function addVoteCountsToArticle(Article $article): void
+    {
+        $counts = $this->voteRepository->getVoteCountsForEntity($article->getId(), VoteEntity::ARTICLE);
+        $article->setLikes($counts['likes']);
+        $article->setDislikes($counts['dislikes']);
     }
 
     public function save(Article $article, bool $flush = true): Article

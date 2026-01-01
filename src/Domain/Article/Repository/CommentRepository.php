@@ -6,6 +6,8 @@ namespace App\Domain\Article\Repository;
 
 use App\Domain\Article\Entity\Comment;
 use App\Domain\Article\Enum\CommentStatus;
+use App\Domain\Vote\Enum\VoteEntity;
+use App\Domain\Vote\Repository\VoteRepository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,8 +17,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CommentRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly VoteRepository $voteRepository,
+    ) {
         parent::__construct($registry, Comment::class);
     }
 
@@ -42,8 +46,11 @@ class CommentRepository extends ServiceEntityRepository
         $paginator = new Paginator($qb);
         $total = count($paginator);
 
+        $comments = iterator_to_array($paginator);
+        $this->addVoteCounts($comments);
+
         return [
-            'items' => iterator_to_array($paginator),
+            'items' => $comments,
             'total' => $total,
             'page' => $page,
             'perPage' => $perPage,
@@ -58,7 +65,7 @@ class CommentRepository extends ServiceEntityRepository
      */
     public function findApprovedReplies(int $parentId): array
     {
-        return $this->createQueryBuilder('c')
+        $comments = $this->createQueryBuilder('c')
             ->leftJoin('c.user', 'u')
             ->addSelect('u')
             ->where('c.parentId = :parentId')
@@ -68,6 +75,10 @@ class CommentRepository extends ServiceEntityRepository
             ->orderBy('c.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
+
+        $this->addVoteCounts($comments);
+
+        return $comments;
     }
 
     /**
@@ -175,5 +186,36 @@ class CommentRepository extends ServiceEntityRepository
     public function flush(): void
     {
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * Add vote counts to a collection of comments.
+     *
+     * @param Comment[] $comments
+     */
+    public function addVoteCounts(array $comments): void
+    {
+        if (empty($comments)) {
+            return;
+        }
+
+        $commentIds = array_map(fn(Comment $c) => $c->getId(), $comments);
+        $voteCounts = $this->voteRepository->getVoteCountsForEntities($commentIds, VoteEntity::ARTICLE_COMMENT);
+
+        foreach ($comments as $comment) {
+            $counts = $voteCounts[$comment->getId()] ?? ['likes' => 0, 'dislikes' => 0];
+            $comment->setLikes($counts['likes']);
+            $comment->setDislikes($counts['dislikes']);
+        }
+    }
+
+    /**
+     * Add vote counts to a single comment.
+     */
+    public function addVoteCountsToComment(Comment $comment): void
+    {
+        $counts = $this->voteRepository->getVoteCountsForEntity($comment->getId(), VoteEntity::ARTICLE_COMMENT);
+        $comment->setLikes($counts['likes']);
+        $comment->setDislikes($counts['dislikes']);
     }
 }

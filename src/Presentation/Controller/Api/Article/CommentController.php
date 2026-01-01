@@ -12,6 +12,10 @@ use App\Domain\Article\Enum\CommentStatus;
 use App\Domain\Article\Repository\ArticleRepository;
 use App\Domain\Article\Repository\CommentRepository;
 use App\Domain\User\Entity\User;
+use App\Domain\Vote\Entity\Vote;
+use App\Domain\Vote\Enum\VoteEntity;
+use App\Domain\Vote\Enum\VoteType;
+use App\Domain\Vote\Repository\VoteRepository;
 use App\Presentation\Controller\Api\AbstractApiController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,6 +31,7 @@ final class CommentController extends AbstractApiController
     public function __construct(
         private readonly CommentRepository $commentRepository,
         private readonly ArticleRepository $articleRepository,
+        private readonly VoteRepository $voteRepository,
         private readonly NormalizerInterface $normalizer,
     ) {}
 
@@ -246,5 +251,139 @@ final class CommentController extends AbstractApiController
         $this->commentRepository->flush();
 
         return $this->success(['moderated' => $count]);
+    }
+
+    // ==================== VOTE ENDPOINTS ====================
+
+    /**
+     * Like a comment (authenticated).
+     */
+    #[Route('/{id<\d+>}/like', name: 'like', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function like(
+        int $id,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $comment = $this->commentRepository->find($id);
+
+        if (!$comment || !$comment->isApproved()) {
+            return $this->notFound('Comment not found');
+        }
+
+        return $this->handleVote($id, $user->getId(), VoteType::LIKE);
+    }
+
+    /**
+     * Dislike a comment (authenticated).
+     */
+    #[Route('/{id<\d+>}/dislike', name: 'dislike', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function dislike(
+        int $id,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $comment = $this->commentRepository->find($id);
+
+        if (!$comment || !$comment->isApproved()) {
+            return $this->notFound('Comment not found');
+        }
+
+        return $this->handleVote($id, $user->getId(), VoteType::DISLIKE);
+    }
+
+    /**
+     * Remove vote from a comment (authenticated).
+     */
+    #[Route('/{id<\d+>}/vote', name: 'remove_vote', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function removeVote(
+        int $id,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $comment = $this->commentRepository->find($id);
+
+        if (!$comment) {
+            return $this->notFound('Comment not found');
+        }
+
+        $existingVote = $this->voteRepository->findExistingVote($user->getId(), $id, VoteEntity::ARTICLE_COMMENT);
+
+        if (!$existingVote) {
+            return $this->error('No vote found', 404);
+        }
+
+        $this->voteRepository->remove($existingVote);
+
+        $counts = $this->voteRepository->getVoteCountsForEntity($id, VoteEntity::ARTICLE_COMMENT);
+
+        return $this->success([
+            'message' => 'Vote removed',
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => null,
+        ]);
+    }
+
+    /**
+     * Get user's vote on a comment (authenticated).
+     */
+    #[Route('/{id<\d+>}/vote', name: 'get_vote', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getVote(
+        int $id,
+        #[CurrentUser] User $user,
+    ): JsonResponse {
+        $comment = $this->commentRepository->find($id);
+
+        if (!$comment) {
+            return $this->notFound('Comment not found');
+        }
+
+        $existingVote = $this->voteRepository->findExistingVote($user->getId(), $id, VoteEntity::ARTICLE_COMMENT);
+        $counts = $this->voteRepository->getVoteCountsForEntity($id, VoteEntity::ARTICLE_COMMENT);
+
+        return $this->success([
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => $existingVote?->voteType->value,
+        ]);
+    }
+
+    /**
+     * Handle vote logic (like/dislike with toggle).
+     */
+    private function handleVote(int $commentId, int $userId, VoteType $voteType): JsonResponse
+    {
+        $existingVote = $this->voteRepository->findExistingVote($userId, $commentId, VoteEntity::ARTICLE_COMMENT);
+
+        if ($existingVote) {
+            if ($existingVote->voteType === $voteType) {
+                // Same vote type = remove vote (toggle off)
+                $this->voteRepository->remove($existingVote);
+                $message = 'Vote removed';
+                $userVote = null;
+            } else {
+                // Different vote type = change vote
+                $existingVote->updateType($voteType);
+                $this->voteRepository->save($existingVote);
+                $message = $voteType === VoteType::LIKE ? 'Changed to like' : 'Changed to dislike';
+                $userVote = $voteType->value;
+            }
+        } else {
+            // New vote
+            $vote = Vote::create($userId, $commentId, VoteEntity::ARTICLE_COMMENT, $voteType);
+            $this->voteRepository->save($vote);
+            $message = $voteType === VoteType::LIKE ? 'Comment liked' : 'Comment disliked';
+            $userVote = $voteType->value;
+        }
+
+        $counts = $this->voteRepository->getVoteCountsForEntity($commentId, VoteEntity::ARTICLE_COMMENT);
+
+        return $this->success([
+            'message' => $message,
+            'likes' => $counts['likes'],
+            'dislikes' => $counts['dislikes'],
+            'user_vote' => $userVote,
+        ]);
     }
 }

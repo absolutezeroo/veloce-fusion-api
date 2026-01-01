@@ -98,6 +98,10 @@ class Comment
         get => $this->replies;
     }
 
+    // Vote counts (computed, not stored)
+    private int $likes = 0;
+    private int $dislikes = 0;
+
     public function __construct()
     {
         $this->replies = new ArrayCollection();
@@ -137,6 +141,30 @@ class Comment
         return $this->replies->filter(
             fn(self $r) => $r->status->isVisible()
         )->count();
+    }
+
+    #[Groups(['comment:read', 'comment:list'])]
+    public function getLikes(): int
+    {
+        return $this->likes;
+    }
+
+    public function setLikes(int $likes): static
+    {
+        $this->likes = $likes;
+        return $this;
+    }
+
+    #[Groups(['comment:read', 'comment:list'])]
+    public function getDislikes(): int
+    {
+        return $this->dislikes;
+    }
+
+    public function setDislikes(int $dislikes): static
+    {
+        $this->dislikes = $dislikes;
+        return $this;
     }
 
     public function updateContent(string $content): static
