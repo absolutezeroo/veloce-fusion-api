@@ -1,6 +1,11 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
 parameters:
+    hotel.start_credits: 5000
+    hotel.start_points: 100
+    hotel.start_pixels: 500
+    hotel.start_motto: 'Welcome to Veloce!'
+    hotel.max_accounts_per_ip: 3
 
 services:
     _defaults:
@@ -19,3 +24,11 @@ services:
             $environment: '%kernel.environment%'
         tags:
             - { name: kernel.event_listener, event: kernel.exception, priority: 100 }
+
+    App\Domain\User\Service\RegisterUserService:
+        arguments:
+            $startCredits: '%hotel.start_credits%'
+            $startPoints: '%hotel.start_points%'
+            $startPixels: '%hotel.start_pixels%'
+            $startMotto: '%hotel.start_motto%'
+            $maxAccountsPerIp: '%hotel.max_accounts_per_ip%'

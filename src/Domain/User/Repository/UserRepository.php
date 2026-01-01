@@ -42,12 +42,24 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $this->findOneBy(['mail' => strtolower($email)]);
     }
 
-    public function save(User $user, bool $flush = true): void
+    public function countByIp(string $ipAddress): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.ipRegister = :ip')
+            ->setParameter('ip', $ipAddress)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function save(User $user, bool $flush = true): User
     {
         $this->getEntityManager()->persist($user);
 
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+
+        return $user;
     }
 }

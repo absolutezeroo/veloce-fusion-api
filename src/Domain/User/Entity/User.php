@@ -4,18 +4,27 @@ declare(strict_types=1);
 
 namespace App\Domain\User\Entity;
 
-use App\Domain\Shared\Entity\AbstractEntity;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: \App\Domain\User\Repository\UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[ORM\HasLifecycleCallbacks]
-class User extends AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['user:read', 'user:list'])]
+    private int $id {
+        get => $this->id;
+    }
+
     #[ORM\Column(length: 25, unique: true)]
     #[Groups(['user:read', 'user:list'])]
     public private(set) string $username {
@@ -30,7 +39,7 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     }
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:private'])]
     public private(set) string $mail {
         get => $this->mail;
         set => strtolower(trim($value));
@@ -75,7 +84,7 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
 
     #[ORM\Column(name: 'ip_register', length: 45)]
     #[Ignore]
-    private string $ipRegister {
+    private string $ipRegister = '' {
         get => $this->ipRegister;
     }
 
@@ -107,6 +116,29 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[Groups(['user:read'])]
     public private(set) ?int $accountCreated = null {
         get => $this->accountCreated;
+    }
+
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: UserSetting::class, cascade: ['persist', 'remove'])]
+    #[Groups(['user:read'])]
+    private ?UserSetting $settings = null {
+        get => $this->settings;
+    }
+
+    /** @var Collection<int, UserCurrency> */
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserCurrency::class, cascade: ['persist', 'remove'])]
+    #[Groups(['user:read'])]
+    private Collection $currencies {
+        get => $this->currencies;
+    }
+
+    public function __construct()
+    {
+        $this->currencies = new ArrayCollection();
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     public function getUserIdentifier(): string
@@ -221,5 +253,42 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     {
         $this->accountCreated = $accountCreated;
         return $this;
+    }
+
+    public function getSettings(): ?UserSetting
+    {
+        return $this->settings;
+    }
+
+    public function setSettings(UserSetting $settings): static
+    {
+        $this->settings = $settings;
+        $settings->setUser($this);
+        return $this;
+    }
+
+    /** @return Collection<int, UserCurrency> */
+    public function getCurrencies(): Collection
+    {
+        return $this->currencies;
+    }
+
+    public function addCurrency(UserCurrency $currency): static
+    {
+        if (!$this->currencies->contains($currency)) {
+            $this->currencies->add($currency);
+            $currency->setUser($this);
+        }
+        return $this;
+    }
+
+    public function getCurrencyByType(int $type): ?UserCurrency
+    {
+        foreach ($this->currencies as $currency) {
+            if ($currency->type === $type) {
+                return $currency;
+            }
+        }
+        return null;
     }
 }
