@@ -6,6 +6,9 @@ parameters:
     hotel.start_pixels: 500
     hotel.start_motto: 'Welcome to Veloce!'
     hotel.max_accounts_per_ip: 3
+    # Refresh token settings
+    auth.refresh_token_ttl: 604800  # 7 days in seconds
+    auth.max_sessions_per_user: 5
 
 services:
     _defaults:
@@ -32,3 +35,21 @@ services:
             $startPixels: '%hotel.start_pixels%'
             $startMotto: '%hotel.start_motto%'
             $maxAccountsPerIp: '%hotel.max_accounts_per_ip%'
+
+    # Refresh token service
+    App\Domain\Auth\Service\RefreshTokenService:
+        arguments:
+            $refreshTokenTtl: '%auth.refresh_token_ttl%'
+            $maxSessionsPerUser: '%auth.max_sessions_per_user%'
+
+    # Authentication success listener (sets refresh token cookie on login)
+    App\Infrastructure\EventListener\AuthenticationSuccessListener:
+        arguments:
+            $appEnv: '%kernel.environment%'
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccess, priority: -10 }
+
+    # Auth controller needs app environment for cookie security
+    App\Presentation\Controller\Api\Auth\AuthController:
+        arguments:
+            $appEnv: '%kernel.environment%'

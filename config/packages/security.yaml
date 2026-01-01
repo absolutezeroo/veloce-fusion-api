@@ -38,9 +38,27 @@ security:
         - { path: '^/[a-z]{2}/auth/login$', roles: PUBLIC_ACCESS }
         - { path: '^/[a-z]{2}/auth/register$', roles: PUBLIC_ACCESS }
         - { path: '^/[a-z]{2}/auth/register/looks$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/auth/refresh$', roles: PUBLIC_ACCESS }
+        - { path: '^/[a-z]{2}/auth/logout$', roles: PUBLIC_ACCESS }
         - { path: '^/[a-z]{2}/user/look$', roles: PUBLIC_ACCESS }
         - { path: '^/[a-z]{2}/user/online$', roles: PUBLIC_ACCESS }
         - { path: '^/[a-z]{2}/settings/', roles: PUBLIC_ACCESS }
+        # Articles - Public read routes (GET only)
+        - { path: '^/[a-z]{2}/articles$', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/\d+$', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/slug/', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/featured', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/pinned', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/search', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/articles/tag/', roles: PUBLIC_ACCESS, methods: [GET] }
+        # Categories & Tags - Public read
+        - { path: '^/[a-z]{2}/categories$', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/categories/\d+$', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/tags$', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/tags/popular', roles: PUBLIC_ACCESS, methods: [GET] }
+        # Comments - Public read
+        - { path: '^/[a-z]{2}/comments/article/', roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: '^/[a-z]{2}/comments/\d+/replies$', roles: PUBLIC_ACCESS, methods: [GET] }
         # All other API routes require authentication
         - { path: '^/[a-z]{2}/', roles: IS_AUTHENTICATED_FULLY }
 
