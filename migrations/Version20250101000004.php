@@ -19,46 +19,49 @@ final class Version20250101000004 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $now = date('Y-m-d H:i:s');
+
         // Insert article permissions
         $this->addSql("
-            INSERT INTO veloce_permissions (name, description, category) VALUES
-            ('VIEW_ARTICLES', 'Can view all articles including drafts', 'article'),
-            ('CREATE_ARTICLE', 'Can create new articles', 'article'),
-            ('EDIT_ARTICLE', 'Can edit existing articles', 'article'),
-            ('PUBLISH_ARTICLE', 'Can publish, schedule, and archive articles', 'article'),
-            ('DELETE_ARTICLE', 'Can delete articles', 'article'),
-            ('MANAGE_CATEGORIES', 'Can manage article categories', 'article'),
-            ('MODERATE_COMMENTS', 'Can moderate article comments', 'article')
+            INSERT INTO veloce_permissions (name, description, status, created_at) VALUES
+            ('VIEW_ARTICLES', 'Can view all articles including drafts', 1, '$now'),
+            ('CREATE_ARTICLE', 'Can create new articles', 1, '$now'),
+            ('EDIT_ARTICLE', 'Can edit existing articles', 1, '$now'),
+            ('PUBLISH_ARTICLE', 'Can publish, schedule, and archive articles', 1, '$now'),
+            ('DELETE_ARTICLE', 'Can delete articles', 1, '$now'),
+            ('MANAGE_CATEGORIES', 'Can manage article categories', 1, '$now'),
+            ('MODERATE_COMMENTS', 'Can moderate article comments', 1, '$now')
+            ON DUPLICATE KEY UPDATE description = VALUES(description)
         ");
 
         // Assign article permissions to roles
         // Staff (rank 3+): VIEW, CREATE, EDIT
         $this->addSql("
-            INSERT INTO veloce_roles_permission (role_id, permission_id)
-            SELECT r.id, p.id
+            INSERT IGNORE INTO veloce_roles_permission (role_id, permission_id, created_at)
+            SELECT r.id, p.id, '$now'
             FROM veloce_roles r
             CROSS JOIN veloce_permissions p
-            WHERE r.name = 'staff'
+            WHERE r.name = 'STAFF'
             AND p.name IN ('VIEW_ARTICLES', 'CREATE_ARTICLE', 'EDIT_ARTICLE')
         ");
 
         // Moderator (rank 4+): + PUBLISH, MODERATE_COMMENTS (inherited via hierarchy)
         $this->addSql("
-            INSERT INTO veloce_roles_permission (role_id, permission_id)
-            SELECT r.id, p.id
+            INSERT IGNORE INTO veloce_roles_permission (role_id, permission_id, created_at)
+            SELECT r.id, p.id, '$now'
             FROM veloce_roles r
             CROSS JOIN veloce_permissions p
-            WHERE r.name = 'moderator'
+            WHERE r.name = 'MODERATOR'
             AND p.name IN ('PUBLISH_ARTICLE', 'MODERATE_COMMENTS')
         ");
 
         // Admin (rank 5+): + DELETE, MANAGE_CATEGORIES (inherited via hierarchy)
         $this->addSql("
-            INSERT INTO veloce_roles_permission (role_id, permission_id)
-            SELECT r.id, p.id
+            INSERT IGNORE INTO veloce_roles_permission (role_id, permission_id, created_at)
+            SELECT r.id, p.id, '$now'
             FROM veloce_roles r
             CROSS JOIN veloce_permissions p
-            WHERE r.name = 'admin'
+            WHERE r.name = 'ADMIN'
             AND p.name IN ('DELETE_ARTICLE', 'MANAGE_CATEGORIES')
         ");
     }
@@ -69,10 +72,13 @@ final class Version20250101000004 extends AbstractMigration
         $this->addSql("
             DELETE rp FROM veloce_roles_permission rp
             INNER JOIN veloce_permissions p ON rp.permission_id = p.id
-            WHERE p.category = 'article'
+            WHERE p.name IN ('VIEW_ARTICLES', 'CREATE_ARTICLE', 'EDIT_ARTICLE', 'PUBLISH_ARTICLE', 'DELETE_ARTICLE', 'MANAGE_CATEGORIES', 'MODERATE_COMMENTS')
         ");
 
         // Remove article permissions
-        $this->addSql("DELETE FROM veloce_permissions WHERE category = 'article'");
+        $this->addSql("
+            DELETE FROM veloce_permissions
+            WHERE name IN ('VIEW_ARTICLES', 'CREATE_ARTICLE', 'EDIT_ARTICLE', 'PUBLISH_ARTICLE', 'DELETE_ARTICLE', 'MANAGE_CATEGORIES', 'MODERATE_COMMENTS')
+        ");
     }
 }

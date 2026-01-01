@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 #[Route('/auth', name: 'api_auth_')]
@@ -150,16 +151,11 @@ final class AuthController extends AbstractApiController
     }
 
     #[Route('/me', name: 'me', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function me(): JsonResponse
     {
-        $user = $this->getUser();
-
-        if (!$user) {
-            return $this->error('Not authenticated', 401);
-        }
-
         return $this->success(
-            $this->normalizer->normalize($user, 'json', ['groups' => ['user:read']])
+            $this->normalizer->normalize($this->getUser(), 'json', ['groups' => ['user:read']])
         );
     }
 
