@@ -14,3 +14,7 @@ parameters:
         - '#Property .+::\$id is never written, only read#'
         - '#Property .+::\$id is unused#'
         - '#Property .+::\$ip.+ is never read, only written#'
+        # Doctrine relations are managed by ORM, not directly accessed
+        - '#Property .+::\$rolePermissions is never read, only written#'
+        - '#Property .+::\$roleRanks is never read, only written#'
+        - '#Property .+::\$(parentRole|childRole|role|permission|bannedUser|staffUser).+ can be removed from the property type#'
