@@ -10,8 +10,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 final class LocaleSubscriber implements EventSubscriberInterface
 {
-    private const SUPPORTED_LOCALES = ['en', 'fr', 'de', 'es', 'pt', 'nl'];
-    private const DEFAULT_LOCALE = 'en';
+    private const array SUPPORTED_LOCALES = ['en', 'fr', 'de', 'es', 'pt', 'nl'];
+    private const string DEFAULT_LOCALE = 'en';
 
     public static function getSubscribedEvents(): array
     {
