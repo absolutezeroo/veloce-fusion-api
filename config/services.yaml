@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Domain/*/Entity/'
+            - '../src/Application/*/DTO/'
+            - '../src/Kernel.php'
+
+    App\Infrastructure\EventListener\ExceptionListener:
+        arguments:
+            $environment: '%kernel.environment%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, priority: 100 }

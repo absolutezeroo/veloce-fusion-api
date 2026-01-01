@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
+
+controllers:
+    resource:
+        path: ../src/Presentation/Controller/
+        namespace: App\Presentation\Controller
+    type: attribute
+
+api_controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
